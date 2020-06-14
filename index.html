@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>test 01 - Processing.js</title>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/processing.js/1.6.6/processing.min.js"></script>
+
+<script type="text/javascript">
+window.onload = function() {
+  var canvas = document.getElementsByTagName('canvas')[0];
+  // Processing のソースコードが書かれた script 要素
+  var codeElm = document.getElementById('processing-code');
+  // 要素の内容を取得する
+  var code = codeElm.textContent || codeElm.innerText || codeElm.text;
+  new Processing(canvas, code);
+};
+</script>
+
+<script id="processing-code" type="application/processing">
+static int WIDTH = 640;
+static int HEIGHT = 480;
+static int SPACE = 60;
+static int SPEED = 10; // the higher value, the slower speed
+
+int getRandomColor() {
+  return random(0, 255);
+}
+
+int getNextPosition(int from, int to) {
+  if (from != to) {
+    return from + ((to - from) / SPEED);
+  }
+  return to;
+}
+
+static int CHILD_BASE_X = 600;
+static int CHILD_BASE_Y = 40;
+static int CHILD_COUNT = 8;
+
+class Parent {
+  int x = 50;
+  int y = 240;
+  int r = 25;
+  int[] colors;
+  Parent() {
+    colors = new int[3];
+    for (int i = 0; i<3; i++) {
+      colors[i] = getRandomColor();
+    }
+  }
+}
+
+class Child {
+  int x;
+  int y;
+  int r = 25;
+  int[] colors;
+  Child() {
+    x = random(0, WIDTH);
+    y = random(0, HEIGHT);
+    colors = new int[3];
+    for (int i = 0; i<3; i++) {
+      colors[i] = getRandomColor();
+    }
+  }
+}
+
+Parent parent = new Parent();
+Child[] children = new Child[CHILD_COUNT];
+
+void setup() {
+  size(WIDTH, HEIGHT);
+  noStroke();
+  for (int i = 0; i < CHILD_COUNT; i++) {
+    children[i] = new Child();
+  }
+  frameRate(60);
+}
+
+void draw() { 
+  background(0);
+  
+  // parent ellipse
+  fill(parent.colors[0], parent.colors[1], parent.colors[2]);
+  ellipse(parent.x, parent.y, parent.r*2, parent.r*2);
+
+  // child ellipses
+  for (int i = 0; i < CHILD_COUNT; i++) {
+    Child child = children[i];
+    fill(child.colors[0], child.colors[1], child.colors[2]);
+    ellipse(child.x, child.y, child.r*2, child.r*2);
+  }
+
+  if (mouseX >= parent.x - parent.r && mouseX <= parent.x + parent.r
+    && mouseY >= parent.y - parent.r && mouseY <= parent.y + parent.r) {
+    int targetX, targetY;
+    // when onmouseover
+    for (int i = 0; i < CHILD_COUNT; i++) {
+      if (i == 0) {
+        targetX = parent.x + SPACE;
+        targetY = parent.y;
+      } else {
+        targetX = children[i-1].x + SPACE;
+        targetY = children[i-1].y;
+      }
+    
+      Child child = children[i];
+      if (child.x != targetX) {
+        child.x = getNextPosition(child.x, targetX);
+      }
+      if (child.y != targetY) {
+        child.y = getNextPosition(child.y, targetY);
+      }
+    }
+  } else {
+    // when onmouseout
+    for (int i = 0; i < CHILD_COUNT; i++) {
+      if (i == 0) {
+        targetX = CHILD_BASE_X;
+        targetY = CHILD_BASE_Y;
+      } else {
+        targetX = children[i-1].x;
+        targetY = children[i-1].y;
+      }
+      Child child = children[i];
+      if (child.x != targetX) {
+        child.x = getNextPosition(child.x, targetX);
+      }
+      if (child.y != targetY) {
+        child.y = getNextPosition(child.y, targetY);
+      }
+    }
+  }
+}
+</script>
+</head>
+
+<body>
+<div>
+<canvas width="640" height="480" id="canvas"></canvas>
+</div>
+</body>
+</html>
